@@ -3,10 +3,12 @@ from pathlib import Path
 
 from aiogram import Dispatcher, Bot
 from aiogram.dispatcher.filters import ContentTypesFilter
+from aiogram_dialog import DialogRegistry
 
 from app.config import load_config
 from app.config.logging_config import setup_logging
 from app.handlers import setup_handlers
+from app.handlers.dialogs import setup_dialogs
 from app.middlewares import setup_middlewares
 from app.models.config.main import Paths
 from app.models.db import create_pool
@@ -21,6 +23,8 @@ def main():
     config = load_config(paths)
 
     dp = Dispatcher()
+    registry = DialogRegistry(dp)
+    setup_dialogs(registry)
     dp.message.bind_filter(ContentTypesFilter)
     setup_middlewares(dp, create_pool(config.db), config.bot)
     setup_handlers(dp, config.bot)
