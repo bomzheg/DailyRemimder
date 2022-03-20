@@ -13,6 +13,7 @@ class SettingsSG(StatesGroup):
 
 async def get_participants(c: CallbackQuery, button: Button, manager: DialogManager):
     await c.answer("hello")
+    await manager.dialog().switch_to(SettingsSG.participants)
 
 
 dialog = Dialog(
