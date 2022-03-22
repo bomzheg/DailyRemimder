@@ -38,6 +38,11 @@ async def get_participants(c: CallbackQuery, _: Button, manager: DialogManager):
     await manager.dialog().switch_to(SettingsSG.participants)
 
 
+async def get_meeting_menu(c: CallbackQuery, _: Button, manager: DialogManager):
+    await c.answer()
+    await manager.dialog().switch_to(SettingsSG.main)
+
+
 async def change_select(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
     await c.answer(f"clicked {item_id}")
     asked_id = int(item_id)
@@ -62,6 +67,11 @@ dialog = Dialog(
     ),
     Window(
         Const("Подписчики"),
+        Button(
+            Const("Назад"),
+            id="to_main",
+            on_click=get_meeting_menu,
+        ),
         ScrollingGroup(
             Select(
                 Format("{item.is_checked}{item.name}"),
