@@ -3,9 +3,10 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import Dialog, Window, DialogManager
 from aiogram_dialog.widgets.kbd import Button, ScrollingGroup, Select
 from aiogram_dialog.widgets.text import Const, Format
-from typing import Any
 
 from dataclasses import dataclass
+
+from typing import Any
 
 
 class SettingsSG(StatesGroup):
@@ -56,7 +57,7 @@ async def change_select(c: CallbackQuery, widget: Any, manager: DialogManager, i
             user.checked = not user.checked
 
 
-async def get_potential_participants(dialog_manager: DialogManager, **kwargs):
+async def get_potential_participants(**kwargs):
     return users_db
 
 
