@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from aiogram.dispatcher.fsm.state import StatesGroup, State
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Dialog, Window, DialogManager
+from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo
 from aiogram_dialog.widgets.text import Const, Format
 
@@ -45,6 +46,17 @@ async def get_potential_participants(**kwargs):
     return users_db
 
 
+async def get_time(m: Message, dialog_: Dialog, manager: DialogManager):
+    await manager.start(SettingsSG.timetable, dict(time=m.text))
+
+
+async def get_result(dialog_manager: DialogManager, **kwargs):
+    data = dialog_manager.current_context().start_data
+    return {
+        "my_time": data["time"] if data else "None",
+    }
+
+
 dialog = Dialog(
     Window(
         Const("Настройка ежедневного митинга"),
@@ -83,12 +95,16 @@ dialog = Dialog(
         state=SettingsSG.participants,
     ),
     Window(
-        Const("Расписание"),
+        Format("Введите время.\nYour text is: {my_time}"),
         SwitchTo(
             Const("Назад"),
             id="to_main",
             state=SettingsSG.main,
         ),
+        MessageInput(
+            func=get_time,
+        ),
+        getter=get_result,
         state=SettingsSG.timetable,
     )
 )
