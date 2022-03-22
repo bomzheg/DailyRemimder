@@ -24,7 +24,7 @@ class Participant:
 
     @property
     def is_checked(self):
-        return '✓' if self.checked else ''
+        return '✓' if self.checked else '✗'
 
 
 users_db = {"users": [
@@ -41,6 +41,11 @@ async def get_participants(c: CallbackQuery, _: Button, manager: DialogManager):
 async def get_meeting_menu(c: CallbackQuery, _: Button, manager: DialogManager):
     await c.answer()
     await manager.dialog().switch_to(SettingsSG.main)
+
+
+async def get_timetable(c: CallbackQuery, _: Button, manager: DialogManager):
+    await c.answer()
+    await manager.dialog().switch_to(SettingsSG.timetable)
 
 
 async def change_select(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -60,8 +65,13 @@ dialog = Dialog(
         Const("Настройка ежедневного митинга"),
         Button(
             Const("Подписчики"),
-            id="participants_ls",
+            id="to_participants_ls",
             on_click=get_participants,
+        ),
+        Button(
+            Const("Расписание"),
+            id="to_timetable",
+            on_click=get_timetable,
         ),
         state=SettingsSG.main,
     ),
@@ -87,4 +97,14 @@ dialog = Dialog(
         getter=get_potential_participants,
         state=SettingsSG.participants,
     ),
+    Window(
+        Const("Расписание"),
+        Button(
+            Const("Назад"),
+            id="to_main",
+            on_click=get_meeting_menu,
+        ),
+
+        state=SettingsSG.timetable,
+    )
 )
