@@ -1,12 +1,11 @@
+from dataclasses import dataclass
+from typing import Any
+
 from aiogram.dispatcher.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery
 from aiogram_dialog import Dialog, Window, DialogManager
-from aiogram_dialog.widgets.kbd import Button, ScrollingGroup, Select
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo
 from aiogram_dialog.widgets.text import Const, Format
-
-from dataclasses import dataclass
-
-from typing import Any
 
 
 class SettingsSG(StatesGroup):
@@ -34,21 +33,6 @@ users_db = {"users": [
 ]}
 
 
-async def get_participants(c: CallbackQuery, _: Button, manager: DialogManager):
-    await c.answer()
-    await manager.dialog().switch_to(SettingsSG.participants)
-
-
-async def get_meeting_menu(c: CallbackQuery, _: Button, manager: DialogManager):
-    await c.answer()
-    await manager.dialog().switch_to(SettingsSG.main)
-
-
-async def get_timetable(c: CallbackQuery, _: Button, manager: DialogManager):
-    await c.answer()
-    await manager.dialog().switch_to(SettingsSG.timetable)
-
-
 async def change_select(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
     await c.answer(f"clicked {item_id}")
     asked_id = int(item_id)
@@ -64,24 +48,24 @@ async def get_potential_participants(**kwargs):
 dialog = Dialog(
     Window(
         Const("Настройка ежедневного митинга"),
-        Button(
+        SwitchTo(
             Const("Подписчики"),
             id="to_participants_ls",
-            on_click=get_participants,
+            state=SettingsSG.participants,
         ),
-        Button(
+        SwitchTo(
             Const("Расписание"),
             id="to_timetable",
-            on_click=get_timetable,
+            state=SettingsSG.timetable,
         ),
         state=SettingsSG.main,
     ),
     Window(
         Const("Подписчики"),
-        Button(
+        SwitchTo(
             Const("Назад"),
             id="to_main",
-            on_click=get_meeting_menu,
+            state=SettingsSG.main,
         ),
         ScrollingGroup(
             Select(
@@ -100,12 +84,11 @@ dialog = Dialog(
     ),
     Window(
         Const("Расписание"),
-        Button(
+        SwitchTo(
             Const("Назад"),
             id="to_main",
-            on_click=get_meeting_menu,
+            state=SettingsSG.main,
         ),
-
         state=SettingsSG.timetable,
     )
 )
