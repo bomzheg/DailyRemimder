@@ -7,9 +7,18 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Dialog, Window, DialogManager
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo
-from aiogram_dialog.widgets.text import Const, Format
+from aiogram_dialog.widgets.text import Const, Format, Case
 
 TIME_PATTERN = "%H:%M"
+WEEKDAYS = {
+    "MON": "ПН",
+    "TUE": "ВТ",
+    "WED": "СР",
+    "THU": "ЧТ",
+    "FRI": "ПТ",
+    "SUT": "СБ",
+    "SUN": "ВС",
+}
 
 
 class SettingsSG(StatesGroup):
@@ -37,8 +46,6 @@ users_db = {"users": [
     Participant(tg_id=42, db_id=2, username="alex", name="Alexey"),
 ]}
 
-WEEKDAYS = ("ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС")
-
 
 async def change_select(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
     await c.answer(f"clicked {item_id}")
@@ -52,27 +59,41 @@ async def get_potential_participants(**kwargs):
     return users_db
 
 
-async def get_weekdays(**kwargs):
-    return {"weekdays": WEEKDAYS}
+async def get_weekdays(dialog_manager: DialogManager, **kwargs):
+    data: dict[str, Any] = dialog_manager.current_context().start_data
+    days: list[str] = data["new_time"]["days"]
+    return {"weekdays": [
+        (('✓' if en_day in days else '✗') + ru_day, en_day) for en_day, ru_day in WEEKDAYS.items()
+    ]}
 
 
 async def change_weekday(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
     await c.answer(f"clicked {item_id}")
+    data: dict[str, Any] = manager.current_context().start_data
+    for i, day in enumerate(data["new_time"]["days"]):
+        if day == item_id:
+            data["new_time"]["days"].pop(i)
+            return
+    data["new_time"]["days"].append(item_id)
 
 
-async def get_time(m: Message, dialog_: Dialog, manager: DialogManager):
+async def get_time(m: Message, dialog_: Dialog, manager: DialogManager) -> None:
     try:
         time_ = datetime.strptime(m.text, TIME_PATTERN).time()
     except ValueError:
         await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
         return
-    await manager.start(SettingsSG.timetable_time, dict(timetable={time_.strftime(TIME_PATTERN): []}))
+    await manager.start(
+        SettingsSG.timetable_time,
+        dict(new_time={"time": time_.strftime(TIME_PATTERN), "days": []}),
+    )
 
 
-async def get_result(dialog_manager: DialogManager, **kwargs):
-    data = dialog_manager.current_context().start_data
+async def get_saved_time(dialog_manager: DialogManager, **kwargs):
+    data: dict[str, Any] = dialog_manager.current_context().start_data
     return {
-        "my_time": data["timetable"] if data else "None",
+        "my_time": data["new_time"]["time"] if data else "None",
+        "has_data": bool(data),
     }
 
 
@@ -114,7 +135,17 @@ dialog = Dialog(
         state=SettingsSG.participants,
     ),
     Window(
-        Format("Введите время в формате ЧЧ:ММ\nБудет сохранено: {my_time}"),
+        Case(
+            {
+                False: Const("Введите время в формате ЧЧ:ММ"),
+                True: Format(
+                    "Будет сохранено: {my_time}. "
+                    "Нажмите \"Далее\", если уверены, "
+                    "или отправьте другое время в формате ЧЧ:ММ вместо этого"
+                ),
+            },
+            selector="has_data",
+        ),
         SwitchTo(
             Const("Назад"),
             id="to_main",
@@ -128,7 +159,7 @@ dialog = Dialog(
             id="to_timetable_days",
             state=SettingsSG.timetable_days,
         ),
-        getter=get_result,
+        getter=get_saved_time,
         state=SettingsSG.timetable_time,
     ),
     Window(
@@ -139,9 +170,9 @@ dialog = Dialog(
             state=SettingsSG.main,
         ),
         Select(
-            Format("{item}"),
+            Format("{item[0]}"),
             id="weekdays",
-            item_id_getter=lambda x: x,
+            item_id_getter=lambda x: x[1],
             items="weekdays",
             on_click=change_weekday,
         ),
