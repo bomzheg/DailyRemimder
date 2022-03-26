@@ -77,7 +77,7 @@ async def change_weekday(c: CallbackQuery, widget: Any, manager: DialogManager, 
     data["new_time"]["days"].append(item_id)
 
 
-async def get_time(m: Message, dialog_: Dialog, manager: DialogManager) -> None:
+async def get_time(m: Message, dialog_: Any, manager: DialogManager) -> None:
     try:
         time_ = datetime.strptime(m.text, TIME_PATTERN).time()
     except ValueError:
