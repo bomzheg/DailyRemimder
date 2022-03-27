@@ -6,7 +6,7 @@ from aiogram.dispatcher.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Dialog, Window, DialogManager
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button
 from aiogram_dialog.widgets.text import Const, Format, Case
 
 TIME_PATTERN = "%H:%M"
@@ -24,6 +24,7 @@ WEEKDAYS = {
 class SettingsSG(StatesGroup):
     main = State()
     participants = State()
+    timetable = State()
     timetable_time = State()
     timetable_days = State()
 
@@ -83,18 +84,31 @@ async def get_time(m: Message, dialog_: Any, manager: DialogManager) -> None:
     except ValueError:
         await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
         return
-    await manager.start(
-        SettingsSG.timetable_time,
-        dict(new_time={"time": time_.strftime(TIME_PATTERN), "days": []}),
-    )
+    data = manager.current_context().start_data
+    if not isinstance(data, dict):
+        data = {}
+    data['new_time'] = {"time": time_.strftime(TIME_PATTERN), "days": []}
+    await manager.update(data)
+    await manager.switch_to(SettingsSG.timetable_time)
 
 
 async def get_saved_time(dialog_manager: DialogManager, **kwargs):
     data: dict[str, Any] = dialog_manager.current_context().start_data
     return {
-        "my_time": data["new_time"]["time"] if data else "None",
+        "my_time": data.get("new_time", {})["time"] if data else "None",
         "has_data": bool(data),
     }
+
+
+async def save_time(c: CallbackQuery, widget: Button, dialog_manager: DialogManager):
+    data: dict[str, Any] = dialog_manager.current_context().start_data
+    print(data)
+    timetable = data.setdefault("timetable", [])
+    timetable.append(data.pop("new_time"))
+
+
+def render_timetable(data: list[dict[str, str | list[str]]]) -> str:
+    pass
 
 
 dialog = Dialog(
@@ -133,6 +147,15 @@ dialog = Dialog(
         ),
         getter=get_potential_participants,
         state=SettingsSG.participants,
+    ),
+    Window(
+        Const("Ещё нет запланированного времени"),
+        SwitchTo(
+            Const("Добавить время"),
+            id="add_time",
+            state=SettingsSG.timetable_time,
+        ),
+        state=SettingsSG.timetable,
     ),
     Window(
         Case(
@@ -176,6 +199,11 @@ dialog = Dialog(
             item_id_getter=lambda x: x[1],
             items="weekdays",
             on_click=change_weekday,
+        ),
+        Button(
+            Const("Сохранить"),
+            id="save_time",
+            on_click=save_time,
         ),
         getter=get_weekdays,
         state=SettingsSG.timetable_days,
