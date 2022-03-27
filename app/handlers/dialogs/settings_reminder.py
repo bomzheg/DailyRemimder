@@ -158,6 +158,7 @@ dialog = Dialog(
             Const("Далее"),
             id="to_timetable_days",
             state=SettingsSG.timetable_days,
+            when=lambda data, *args: data["has_data"],
         ),
         getter=get_saved_time,
         state=SettingsSG.timetable_time,
