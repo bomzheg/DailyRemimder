@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Text, BigInteger, Boolean
+from sqlalchemy.orm import relationship
 
 from app.models.db.base import Base
+from app.models.db.m2m import meetings_participants
 
 
 class User(Base):
@@ -12,6 +14,11 @@ class User(Base):
     last_name = Column(Text, nullable=True)
     username = Column(Text, nullable=True)
     is_bot = Column(Boolean, default=False)
+    meetings = relationship(
+        "Meeting",
+        secondary=meetings_participants,
+        back_populates="participants",
+    )
 
     def __repr__(self):
         rez = (
