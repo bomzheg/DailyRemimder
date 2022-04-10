@@ -1,10 +1,11 @@
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 from app.dao import BaseDAO
 from app.models import dto
-from app.models.db import Chat
+from app.models.db import Chat, User
 
 
 class ChatDAO(BaseDAO[Chat]):
@@ -32,6 +33,14 @@ class ChatDAO(BaseDAO[Chat]):
         chat_db = await self.get_by_tg_id(chat.tg_id)
         chat_db.tg_id = new_id
         self.save(chat_db)
+
+    async def add_user(self, chat: dto.Chat, user: dto.User):
+        chat_db: Chat = await self.session.get(
+            self.model, chat.db_id, options=[joinedload(self.model.users)],
+        )
+        user_db: User = await self.session.get(User, user.db_id)
+        if user_db not in chat_db.users:
+            chat_db.users.append(user_db)
 
 
 def update_fields(source: dto.Chat, target: Chat):

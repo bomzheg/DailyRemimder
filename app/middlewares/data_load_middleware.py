@@ -6,6 +6,7 @@ from aiogram.types import TelegramObject
 from app.dao.holder import HolderDao
 from app.models import dto
 from app.services.chat import upsert_chat
+from app.services.chats_and_users import upsert_user_chat
 from app.services.user import upsert_user
 
 
@@ -20,6 +21,7 @@ class LoadDataMiddleware(BaseMiddleware):
         holder_dao = data["dao"]
         data["user"] = await save_user(data, holder_dao)
         data["chat"] = await save_chat(data, holder_dao)
+        await upsert_user_chat(data["user"], data["chat"], holder_dao)
         result = await handler(event, data)
         return result
 
