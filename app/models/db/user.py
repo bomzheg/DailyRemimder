@@ -2,7 +2,7 @@ from sqlalchemy import Column, Text, BigInteger, Boolean
 from sqlalchemy.orm import relationship
 
 from app.models.db.base import Base
-from app.models.db.m2m import meetings_participants
+from app.models.db.m2m import meetings_participants, users_chats
 
 
 class User(Base):
@@ -14,6 +14,7 @@ class User(Base):
     last_name = Column(Text, nullable=True)
     username = Column(Text, nullable=True)
     is_bot = Column(Boolean, default=False)
+    chats = relationship("Chat", secondary=users_chats, back_populates="users")
     meetings = relationship(
         "Meeting",
         secondary=meetings_participants,

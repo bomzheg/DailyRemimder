@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from app.enums.chat_type import ChatType
 from app.models.db.base import Base
+from app.models.db.m2m import users_chats
 
 
 class Chat(Base):
@@ -14,6 +15,7 @@ class Chat(Base):
     title = Column(Text, nullable=True)
     username = Column(Text, nullable=True)
 
+    users = relationship("User", secondary=users_chats, back_populates="chats")
     meetings = relationship("Meeting", back_populates="chat")
 
     def __repr__(self):
