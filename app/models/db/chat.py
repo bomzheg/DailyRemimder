@@ -14,7 +14,7 @@ class Chat(Base):
     title = Column(Text, nullable=True)
     username = Column(Text, nullable=True)
 
-    meetings = relationship("Meetings", back_populates="chat")
+    meetings = relationship("Meeting", back_populates="chat")
 
     def __repr__(self):
         rez = (

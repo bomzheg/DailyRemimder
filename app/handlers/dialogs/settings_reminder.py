@@ -5,6 +5,7 @@ from typing import Any
 from aiogram.dispatcher.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Dialog, Window, DialogManager
+from aiogram_dialog.context.context import Context
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button
 from aiogram_dialog.widgets.text import Const, Format, Case
@@ -22,7 +23,8 @@ WEEKDAYS = {
 
 
 class SettingsSG(StatesGroup):
-    main = State()
+    meetings = State()
+    meeting_main = State()
     participants = State()
     timetable = State()
     timetable_time = State()
@@ -39,7 +41,14 @@ class Participant:
 
     @property
     def is_checked(self):
-        return '✓' if self.checked else '✗'
+        return render_bool(self.checked)
+
+
+@dataclass
+class Meeting:
+    id: int
+    name: str
+    chat_id: int
 
 
 users_db = {"users": [
@@ -48,7 +57,16 @@ users_db = {"users": [
 ]}
 
 
-async def change_select(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
+meetings_db = {"meetings": [
+    Meeting(1, "Утренний стендап", 131313),
+]}
+
+
+def render_bool(value: bool) -> str:
+    return '✓' if value else '✗'
+
+
+async def change_select_user(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
     await c.answer(f"clicked {item_id}")
     asked_id = int(item_id)
     for user in users_db["users"]:
@@ -56,15 +74,29 @@ async def change_select(c: CallbackQuery, widget: Any, manager: DialogManager, i
             user.checked = not user.checked
 
 
+async def change_select_meetings(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
+    await c.answer(f"clicked {item_id}")
+    data = manager.current_context().start_data
+    if not isinstance(data, dict):
+        data = {}
+    data["editing_meeting_id"] = int(item_id)
+    await manager.update(data)
+    await manager.switch_to(SettingsSG.meeting_main)
+
+
 async def get_potential_participants(**kwargs):
     return users_db
+
+
+async def get_meetings(**kwargs):
+    return meetings_db
 
 
 async def get_weekdays(dialog_manager: DialogManager, **kwargs):
     data: dict[str, Any] = dialog_manager.current_context().start_data
     days: list[str] = data["new_time"]["days"]
     return {"weekdays": [
-        (('✓' if en_day in days else '✗') + ru_day, en_day) for en_day, ru_day in WEEKDAYS.items()
+        (render_bool(en_day in days) + ru_day, en_day) for en_day, ru_day in WEEKDAYS.items()
     ]}
 
 
@@ -102,7 +134,6 @@ async def get_saved_time(dialog_manager: DialogManager, **kwargs):
 
 async def save_time(c: CallbackQuery, widget: Button, dialog_manager: DialogManager):
     data: dict[str, Any] = dialog_manager.current_context().start_data
-    print(data)
     timetable = data.setdefault("timetable", [])
     timetable.append(data.pop("new_time"))
 
@@ -111,9 +142,31 @@ def render_timetable(data: list[dict[str, str | list[str]]]) -> str:
     pass
 
 
+async def function(aiogd_context: Context, **kwargs):
+    data = aiogd_context.dialog_data
+    return {"meeting_name": data["editing_meeting_id"]}
+
+
 dialog = Dialog(
     Window(
-        Const("Настройка ежедневного митинга"),
+        Const("Список митингов в этом чате"),
+        ScrollingGroup(
+            Select(
+                Format("{item.name}"),
+                id="meetings",
+                item_id_getter=lambda x: x.id,
+                items="meetings",
+                on_click=change_select_meetings,
+            ),
+            id="meetings_sg",
+            width=1,
+            height=10,
+        ),
+        state=SettingsSG.meetings,
+        getter=get_meetings
+    ),
+    Window(
+        Format("Настройка {meeting_name}"),
         SwitchTo(
             Const("Подписчики"),
             id="to_participants_ls",
@@ -124,14 +177,15 @@ dialog = Dialog(
             id="to_timetable",
             state=SettingsSG.timetable_time,
         ),
-        state=SettingsSG.main,
+        state=SettingsSG.meeting_main,
+        getter=function
     ),
     Window(
         Const("Подписчики"),
         SwitchTo(
             Const("Назад"),
             id="to_main",
-            state=SettingsSG.main,
+            state=SettingsSG.meeting_main,
         ),
         ScrollingGroup(
             Select(
@@ -139,7 +193,7 @@ dialog = Dialog(
                 id="participants",
                 item_id_getter=lambda x: x.tg_id,
                 items="users",
-                on_click=change_select,
+                on_click=change_select_user,
             ),
             id="participants_sg",
             width=1,
@@ -172,7 +226,7 @@ dialog = Dialog(
         SwitchTo(
             Const("Назад"),
             id="to_main",
-            state=SettingsSG.main,
+            state=SettingsSG.meeting_main,
         ),
         MessageInput(
             func=get_time,
@@ -191,7 +245,7 @@ dialog = Dialog(
         SwitchTo(
             Const("В главное меню"),
             id="to_main",
-            state=SettingsSG.main,
+            state=SettingsSG.meeting_main,
         ),
         Select(
             Format("{item[0]}"),
