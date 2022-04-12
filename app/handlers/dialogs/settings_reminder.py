@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
@@ -9,6 +8,12 @@ from aiogram_dialog.context.context import Context
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button
 from aiogram_dialog.widgets.text import Const, Format, Case
+
+from app.dao import HolderDao
+from app.models import dto
+from app.rendering import render_bool
+from app.services.meetings import get_available_meetings
+from app.services.meetings_participants import turn_participant, get_available_participants
 
 TIME_PATTERN = "%H:%M"
 WEEKDAYS = {
@@ -31,47 +36,12 @@ class SettingsSG(StatesGroup):
     timetable_days = State()
 
 
-@dataclass
-class Participant:
-    tg_id: int
-    db_id: int
-    username: str
-    name: str
-    checked: bool = False
-
-    @property
-    def is_checked(self):
-        return render_bool(self.checked)
-
-
-@dataclass
-class Meeting:
-    id: int
-    name: str
-    chat_id: int
-
-
-users_db = {"users": [
-    Participant(tg_id=666, db_id=1, username="bomzheg", name="Yuriy"),
-    Participant(tg_id=42, db_id=2, username="alex", name="Alexey"),
-]}
-
-
-meetings_db = {"meetings": [
-    Meeting(1, "Утренний стендап", 131313),
-]}
-
-
-def render_bool(value: bool) -> str:
-    return '✓' if value else '✗'
-
-
 async def change_select_user(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
     await c.answer(f"clicked {item_id}")
-    asked_id = int(item_id)
-    for user in users_db["users"]:
-        if user.tg_id == asked_id:
-            user.checked = not user.checked
+    data = manager.data
+    await turn_participant(
+        data["dao"], data["chat"], manager.current_context().dialog_data["editing_meeting_id"], int(item_id),
+    )
 
 
 async def change_select_meetings(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -84,12 +54,12 @@ async def change_select_meetings(c: CallbackQuery, widget: Any, manager: DialogM
     await manager.switch_to(SettingsSG.meeting_main)
 
 
-async def get_potential_participants(**kwargs):
-    return users_db
+async def get_potential_participants(dao: HolderDao, chat: dto.Chat, **kwargs):
+    return {"users": (await get_available_participants(dao, chat, -1))}
 
 
-async def get_meetings(**kwargs):
-    return meetings_db
+async def get_meetings(dao: HolderDao, chat: dto.Chat, **kwargs):
+    return {"meetings": await get_available_meetings(dao, chat)}
 
 
 async def get_weekdays(dialog_manager: DialogManager, **kwargs):
@@ -142,7 +112,7 @@ def render_timetable(data: list[dict[str, str | list[str]]]) -> str:
     pass
 
 
-async def function(aiogd_context: Context, **kwargs):
+async def get_meeting_name(aiogd_context: Context, **kwargs):
     data = aiogd_context.dialog_data
     return {"meeting_name": data["editing_meeting_id"]}
 
@@ -178,7 +148,7 @@ dialog = Dialog(
             state=SettingsSG.timetable_time,
         ),
         state=SettingsSG.meeting_main,
-        getter=function
+        getter=get_meeting_name
     ),
     Window(
         Const("Подписчики"),
@@ -189,9 +159,9 @@ dialog = Dialog(
         ),
         ScrollingGroup(
             Select(
-                Format("{item.is_checked}{item.name}"),
+                Format("{item.is_active_char}{item.display_name}"),
                 id="participants",
-                item_id_getter=lambda x: x.tg_id,
+                item_id_getter=lambda x: x.db_id,
                 items="users",
                 on_click=change_select_user,
             ),
