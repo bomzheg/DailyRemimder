@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Any
 
@@ -37,7 +38,7 @@ class SettingsSG(StatesGroup):
 
 
 async def change_select_user(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
-    await c.answer(f"clicked {item_id}")
+    await c.answer()
     data = manager.data
     await turn_participant(
         data["dao"], data["chat"], manager.current_context().dialog_data["editing_meeting_id"], int(item_id),
@@ -45,7 +46,7 @@ async def change_select_user(c: CallbackQuery, widget: Any, manager: DialogManag
 
 
 async def change_select_meetings(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
-    await c.answer(f"clicked {item_id}")
+    await c.answer()
     data = manager.current_context().start_data
     if not isinstance(data, dict):
         data = {}
@@ -54,8 +55,10 @@ async def change_select_meetings(c: CallbackQuery, widget: Any, manager: DialogM
     await manager.switch_to(SettingsSG.meeting_main)
 
 
-async def get_potential_participants(dao: HolderDao, chat: dto.Chat, **kwargs):
-    return {"users": (await get_available_participants(dao, chat, -1))}
+async def get_potential_participants(dao: HolderDao, chat: dto.Chat, dialog_manager: DialogManager, **kwargs):
+    return {"users": (await get_available_participants(
+        dao, chat, dialog_manager.current_context().dialog_data["editing_meeting_id"]
+    ))}
 
 
 async def get_meetings(dao: HolderDao, chat: dto.Chat, **kwargs):
@@ -63,7 +66,7 @@ async def get_meetings(dao: HolderDao, chat: dto.Chat, **kwargs):
 
 
 async def get_weekdays(dialog_manager: DialogManager, **kwargs):
-    data: dict[str, Any] = dialog_manager.current_context().start_data
+    data: dict[str, Any] = dialog_manager.current_context().dialog_data
     days: list[str] = data["new_time"]["days"]
     return {"weekdays": [
         (render_bool(en_day in days) + ru_day, en_day) for en_day, ru_day in WEEKDAYS.items()
@@ -72,7 +75,7 @@ async def get_weekdays(dialog_manager: DialogManager, **kwargs):
 
 async def change_weekday(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
     await c.answer(f"clicked {item_id}")
-    data: dict[str, Any] = manager.current_context().start_data
+    data: dict[str, Any] = manager.current_context().dialog_data
     for i, day in enumerate(data["new_time"]["days"]):
         if day == item_id:
             data["new_time"]["days"].pop(i)
@@ -95,21 +98,33 @@ async def get_time(m: Message, dialog_: Any, manager: DialogManager) -> None:
 
 
 async def get_saved_time(dialog_manager: DialogManager, **kwargs):
-    data: dict[str, Any] = dialog_manager.current_context().start_data
+    data: dict[str, Any] = dialog_manager.current_context().dialog_data
+    my_time = data.get("new_time", {}).get("time", None)
     return {
-        "my_time": data.get("new_time", {})["time"] if data else "None",
-        "has_data": bool(data),
+        "my_time": my_time if my_time else "None",
+        "has_data": bool(my_time),
     }
 
 
 async def save_time(c: CallbackQuery, widget: Button, dialog_manager: DialogManager):
-    data: dict[str, Any] = dialog_manager.current_context().start_data
+    await c.answer()
+    data: dict[str, Any] = dialog_manager.current_context().dialog_data
     timetable = data.setdefault("timetable", [])
     timetable.append(data.pop("new_time"))
+    await dialog_manager.switch_to(SettingsSG.meeting_main)
+
+
+async def get_timetable(dialog_manager: DialogManager, **kwargs):
+    data: dict[str, Any] = dialog_manager.current_context().dialog_data
+    timetable = data.get("timetable", [])
+    return {
+        "timetable": render_timetable(timetable),
+        "has_timetable": bool(timetable),
+    }
 
 
 def render_timetable(data: list[dict[str, str | list[str]]]) -> str:
-    pass
+    return json.dumps(data)
 
 
 async def get_meeting_name(aiogd_context: Context, **kwargs):
@@ -145,7 +160,7 @@ dialog = Dialog(
         SwitchTo(
             Const("Расписание"),
             id="to_timetable",
-            state=SettingsSG.timetable_time,
+            state=SettingsSG.timetable,
         ),
         state=SettingsSG.meeting_main,
         getter=get_meeting_name
@@ -173,12 +188,19 @@ dialog = Dialog(
         state=SettingsSG.participants,
     ),
     Window(
-        Const("Ещё нет запланированного времени"),
+        Case(
+            {
+                False: Const("Ещё нет запланированного времени"),
+                True: Format("Имеющиеся сейчас настройки:\n{timetable}"),
+            },
+            selector="has_timetable",
+        ),
         SwitchTo(
             Const("Добавить время"),
             id="add_time",
             state=SettingsSG.timetable_time,
         ),
+        getter=get_timetable,
         state=SettingsSG.timetable,
     ),
     Window(
