@@ -2,7 +2,7 @@ from aiogram import Dispatcher
 from aiogram.types import Message
 from aiogram_dialog import DialogManager, StartMode
 
-from app.handlers.dialogs.settings_reminder import SettingsSG
+from app.handlers.settings_dialog.states import SettingsSG
 
 
 async def start_setup(_: Message, dialog_manager: DialogManager):

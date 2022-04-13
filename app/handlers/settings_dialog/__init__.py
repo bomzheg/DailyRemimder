@@ -1,6 +1,6 @@
 from aiogram_dialog import DialogRegistry
 
-from app.handlers.dialogs.settings_reminder import dialog
+from app.handlers.settings_dialog.dialogs import dialog
 
 
 def setup_dialogs(registry: DialogRegistry):

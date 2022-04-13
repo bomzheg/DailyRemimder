@@ -9,7 +9,7 @@ from aiogram_dialog import DialogRegistry
 from app.config import load_config
 from app.config.logging_config import setup_logging
 from app.handlers import setup_handlers
-from app.handlers.dialogs import setup_dialogs
+from app.handlers.settings_dialog import setup_dialogs
 from app.middlewares import setup_middlewares
 from app.models.config.main import Paths
 from app.models.db import create_pool
