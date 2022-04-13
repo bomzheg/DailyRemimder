@@ -8,6 +8,7 @@ from app.models import dto
 from app.rendering import render_timetable, render_weekdays
 from app.services.meetings import get_available_meetings
 from app.services.meetings_participants import get_available_participants
+from app.services.timetables import load_timetable
 
 
 async def get_potential_participants(dao: HolderDao, chat: dto.Chat, dialog_manager: DialogManager, **kwargs):
@@ -35,9 +36,9 @@ async def prepare_saved_time(dialog_manager: DialogManager, **kwargs):
     }
 
 
-async def prepare_timetable(dialog_manager: DialogManager, **kwargs):
+async def prepare_timetable(dao: HolderDao, dialog_manager: DialogManager, **kwargs):
     data: dict[str, Any] = dialog_manager.current_context().dialog_data
-    timetable = data.get("timetable", [])
+    timetable = await load_timetable(dao, data["editing_meeting_id"]) or data.get("timetable", [])
     return {
         "timetable": render_timetable(timetable),
         "has_timetable": bool(timetable),

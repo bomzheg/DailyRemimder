@@ -8,6 +8,7 @@ from aiogram_dialog.widgets.kbd import Button
 from app.handlers.settings_dialog.states import SettingsSG
 from app.rendering import TIME_PATTERN
 from app.services.meetings_participants import turn_participant
+from app.services.timetables import add_timetable
 
 
 async def change_select_user(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -42,7 +43,9 @@ async def save_time(c: CallbackQuery, widget: Button, dialog_manager: DialogMana
     await c.answer()
     data: dict[str, Any] = dialog_manager.current_context().dialog_data
     timetable = data.setdefault("timetable", [])
-    timetable.append(data.pop("new_time"))
+    new_timetable = data.pop("new_time")
+    await add_timetable(dialog_manager.data["dao"], dialog_manager.data["editing_meeting_id"], new_timetable)
+    timetable.append(new_timetable)
     await dialog_manager.switch_to(SettingsSG.meeting_main)
 
 

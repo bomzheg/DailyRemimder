@@ -17,6 +17,7 @@ def render_bool(value: bool) -> str:
 
 
 def render_timetable(data: list[dict[str, str | list[str]]]) -> str:
+    # TODO usability render timetable
     return json.dumps(data)
 
 
