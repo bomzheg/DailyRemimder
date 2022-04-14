@@ -15,7 +15,7 @@ async def change_select_user(c: CallbackQuery, widget: Any, manager: DialogManag
     await c.answer()
     data = manager.data
     await turn_participant(
-        data["dao"], data["chat"], manager.current_context().dialog_data["editing_meeting_id"], int(item_id),
+        data["dao"], manager.current_context().dialog_data["editing_meeting_id"], int(item_id),
     )
 
 

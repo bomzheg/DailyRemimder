@@ -1,11 +1,10 @@
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
 
 from app.dao.base import BaseDAO
-from app.models.db import User, Chat
-from app.models import dto
+from app.models.db import User
+from app.models import dto, db
 
 
 class UserDAO(BaseDAO[User]):
@@ -29,8 +28,8 @@ class UserDAO(BaseDAO[User]):
             await self.flush(saved_user)
         return dto.User.from_db(saved_user)
 
-    async def get_chat_participants(self, chat: dto.Chat) -> list[dto.User]:
-        chat = await self.session.get(Chat, chat.db_id, options=[joinedload(Chat.users)])
+    async def get_chat_participants(self, chat: dto.Chat) -> list[db.User]:
+        chat = await self._get_chat_loaded_participants(chat)
         return chat.users
 
 

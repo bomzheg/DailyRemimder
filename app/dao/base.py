@@ -3,6 +3,10 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, TypeVar, Type, Generic
 
+from sqlalchemy.orm import joinedload
+
+from app.models import dto, db
+
 from app.models.db.base import Base
 
 
@@ -43,3 +47,11 @@ class BaseDAO(Generic[Model]):
 
     async def flush(self, *objects):
         await self.session.flush(objects)
+
+    # ------------some concrete but common methods--------------:
+
+    async def _get_chat_loaded_participants(self, chat: dto.Chat) -> db.Chat:
+        chat_db: db.Chat = await self.session.get(
+            db.Chat, chat.db_id, options=[joinedload(db.Chat.users)],
+        )
+        return chat_db

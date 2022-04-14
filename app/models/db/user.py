@@ -30,3 +30,18 @@ class User(Base):
         if self.username:
             rez += f"username=@{self.username}"
         return rez + ">"
+
+    @property
+    def fullname(self):
+        result = ""
+        if self.first_name:
+            result += self.first_name
+        if self.last_name:
+            result += self.last_name
+        if result:
+            return result
+        if self.username:
+            return self.username
+        if self.tg_id:
+            return f"tg id={self.tg_id}"
+        return f"db id={self.id}"

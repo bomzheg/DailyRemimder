@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dao import UserDAO, ChatDAO
 from app.dao.meeting import MeetingDAO
+from app.models import dto
 
 
 @dataclass
@@ -20,3 +21,17 @@ class HolderDao:
 
     async def commit(self):
         await self.session.commit()
+
+    async def get_meeting_participants(self, chat: dto.Chat, meeting_id: int) -> list[dto.Participant]:
+        users = await self.user.get_chat_participants(chat)
+        meeting = await self.meeting.get_by_id_load_participants(meeting_id)
+        return [
+            dto.Participant(
+                user_id=user.tg_id,
+                db_id=user.id,
+                chat_id=chat.tg_id,
+                display_name=user.fullname,
+                active=user in meeting.participants,
+            ) for user in users
+        ]
+

@@ -36,7 +36,7 @@ async def test_save_chat(session: AsyncSession):
     expected = create_db_chat()
     expected.tg_id = NEW_CHAT_ID
 
-    actual = await dao.chat.get_by_tg_id(NEW_CHAT_ID)
+    actual = await dao.chat._get_by_tg_id(NEW_CHAT_ID)
 
     assert_db_chat(expected, actual)
     assert actual.id is not None
