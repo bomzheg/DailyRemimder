@@ -44,7 +44,7 @@ async def save_time(c: CallbackQuery, widget: Button, dialog_manager: DialogMana
     data: dict[str, Any] = dialog_manager.current_context().dialog_data
     timetable = data.setdefault("timetable", [])
     new_timetable = data.pop("new_time")
-    await add_timetable(dialog_manager.data["dao"], dialog_manager.data["editing_meeting_id"], new_timetable)
+    await add_timetable(dialog_manager.data["dao"], data["editing_meeting_id"], new_timetable)
     timetable.append(new_timetable)
     await dialog_manager.switch_to(SettingsSG.meeting_main)
 
