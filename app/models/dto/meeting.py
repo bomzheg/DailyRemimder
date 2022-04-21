@@ -1,18 +1,18 @@
 from dataclasses import dataclass
 
-from app.models import dto, db
+from app.models import db
 
 
 @dataclass
 class Meeting:
     id: int
     name: str
-    chat: dto.Chat
+    chat_id: int
 
     @classmethod
     def from_db(cls, other: db.Meeting):
         return cls(
             id=other.id,
             name=other.name,
-            chat=dto.Chat.from_db(other.chat),
+            chat_id=other.chat_id,
         )
