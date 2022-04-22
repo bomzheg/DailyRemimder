@@ -23,6 +23,11 @@ from app.handlers.settings_dialog.states import SettingsSG
 dialog = Dialog(
     Window(
         Const("Список митингов в этом чате"),
+        SwitchTo(
+            Const("Добавить"),
+            id="to_add_meeting",
+            state=SettingsSG.add_meeting,
+        ),
         ScrollingGroup(
             Select(
                 Format("{item.name}"),
