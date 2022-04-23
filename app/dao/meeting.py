@@ -42,3 +42,6 @@ class MeetingDAO(BaseDAO[db.Meeting]):
             user.meetings.remove(meeting)
         else:
             user.meetings.append(meeting)
+
+    async def create(self, meeting: dto.Meeting):
+        self.save(meeting.to_db())

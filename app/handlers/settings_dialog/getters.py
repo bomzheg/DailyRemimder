@@ -48,3 +48,12 @@ async def prepare_timetable(dao: HolderDao, dialog_manager: DialogManager, **kwa
 async def prepare_meeting_name(aiogd_context: Context, **kwargs):
     data = aiogd_context.dialog_data
     return {"meeting_name": data["editing_meeting_id"]}
+
+
+async def get_saved_date(aiogd_context: Context, **kwargs):
+    data = aiogd_context.dialog_data
+    meeting_name = data.get("new_meeting_name", None)
+    return {
+        "new_meeting_name": meeting_name,
+        "has_data": bool(meeting_name),
+    }

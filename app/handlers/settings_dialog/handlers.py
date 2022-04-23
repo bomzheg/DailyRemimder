@@ -7,6 +7,7 @@ from aiogram_dialog.widgets.kbd import Button
 
 from app.handlers.settings_dialog.states import SettingsSG
 from app.rendering import TIME_PATTERN
+from app.services.meetings import create_new_meeting
 from app.services.meetings_participants import turn_participant
 from app.services.timetables import add_timetable
 
@@ -61,3 +62,25 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
     data['new_time'] = {"time": time_.strftime(TIME_PATTERN), "days": []}
     await manager.update(data)
     await manager.switch_to(SettingsSG.timetable_time)
+
+
+async def process_new_meeting_name(m: Message, dialog_: Any, manager: DialogManager) -> None:
+    data = manager.current_context().start_data
+    if not isinstance(data, dict):
+        data = {}
+    data['new_meeting_name'] = m.text
+    await manager.update(data)
+
+
+async def save_new_meeting(c: CallbackQuery, widget: Button, dialog_manager: DialogManager):
+    await c.answer()
+    data: dict[str, Any] = dialog_manager.current_context().dialog_data
+    meeting_name = data.pop('new_meeting_name')
+    context_data = dialog_manager.data
+    await create_new_meeting(context_data["dao"], meeting_name, context_data["chat"])
+
+
+async def drop_new_meeting_name(c: CallbackQuery, widget: Button, dialog_manager: DialogManager):
+    await c.answer()
+    data: dict[str, Any] = dialog_manager.current_context().dialog_data
+    data.pop('new_meeting_name', None)

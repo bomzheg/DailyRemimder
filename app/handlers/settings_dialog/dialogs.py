@@ -10,6 +10,7 @@ from app.handlers.settings_dialog.getters import (
     prepare_saved_time,
     prepare_timetable,
     prepare_meeting_name,
+    get_saved_date,
 )
 from app.handlers.settings_dialog.handlers import (
     change_weekday,
@@ -17,6 +18,7 @@ from app.handlers.settings_dialog.handlers import (
     change_select_meetings,
     change_select_user,
     process_time_message,
+    process_new_meeting_name, save_new_meeting, drop_new_meeting_name,
 )
 from app.handlers.settings_dialog.states import SettingsSG
 
@@ -42,6 +44,36 @@ dialog = Dialog(
         ),
         state=SettingsSG.meetings,
         getter=get_meetings
+    ),
+    Window(
+        Case(
+            {
+                False: Const("Как назвать новый митинг?"),
+                True: Format(
+                    "Новый митинг будет называться: {new_meeting_name}, верно? "
+                    "Если неверно - отправьте другое название."
+                ),
+            },
+            selector="has_data",
+        ),
+        SwitchTo(
+            Const("Назад"),
+            id="to_main",
+            state=SettingsSG.meetings,
+            on_click=drop_new_meeting_name,
+        ),
+        MessageInput(
+            func=process_new_meeting_name,
+        ),
+        SwitchTo(
+            Const("Сохранить"),
+            id="save_meeting",
+            state=SettingsSG.meetings,
+            when=lambda data, *args: data["has_data"],
+            on_click=save_new_meeting,
+        ),
+        getter=get_saved_date,
+        state=SettingsSG.add_meeting,
     ),
     Window(
         Format("Настройка {meeting_name}"),
