@@ -1,8 +1,8 @@
-import typing
+from typing import TypeAlias, Union
 
 from app.dao import HolderDao
 
-Timetable: typing.TypeAlias = dict[str, list[str]]
+Timetable: TypeAlias = dict[str, Union[str, list[str]]]
 """{"time": "11:30", "days": ["WED", "THU", "FRI"]}"""
 
 
