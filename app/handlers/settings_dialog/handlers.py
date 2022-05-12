@@ -10,7 +10,7 @@ from app.models import dto
 from app.rendering import TIME_PATTERN
 from app.services.meetings import create_new_meeting
 from app.services.meetings_participants import turn_participant
-from app.services.timetables import add_timetable
+from app.services.timetables import add_timetable, get_timetable
 
 
 async def change_select_user(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -19,6 +19,17 @@ async def change_select_user(c: CallbackQuery, widget: Any, manager: DialogManag
     await turn_participant(
         data["dao"], manager.current_context().dialog_data["editing_meeting_id"], int(item_id),
     )
+
+
+async def change_select_time(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
+    await c.answer()
+    data = manager.current_context().start_data
+    if not isinstance(data, dict):
+        data = {}
+    timetable = await get_timetable(manager.data["dao"], int(item_id))
+    data["current_time"] = {"time": timetable.time, "days": timetable.days}
+    await manager.update(data)
+    await manager.switch_to(SettingsSG.timetable_days)
 
 
 async def change_select_meetings(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -34,17 +45,17 @@ async def change_select_meetings(c: CallbackQuery, widget: Any, manager: DialogM
 async def change_weekday(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
     await c.answer()
     data: dict[str, Any] = manager.current_context().dialog_data
-    for i, day in enumerate(data["new_time"]["days"]):
+    for i, day in enumerate(data["current_time"]["days"]):
         if day == item_id:
-            data["new_time"]["days"].pop(i)
+            data["current_time"]["days"].pop(i)
             return
-    data["new_time"]["days"].append(item_id)
+    data["current_time"]["days"].append(item_id)
 
 
 async def save_time(c: CallbackQuery, widget: Button, dialog_manager: DialogManager):
     await c.answer()
     data: dict[str, Any] = dialog_manager.current_context().dialog_data
-    new_timetable = data.pop("new_time")
+    new_timetable = data.pop("current_time")
     await add_timetable(dialog_manager.data["dao"], data["editing_meeting_id"], dto.Timetable(**new_timetable))
     await dialog_manager.switch_to(SettingsSG.meeting_main)
 
@@ -58,7 +69,7 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
     data = manager.current_context().start_data
     if not isinstance(data, dict):
         data = {}
-    data['new_time'] = {"time": time_.strftime(TIME_PATTERN), "days": []}
+    data["current_time"] = {"time": time_.strftime(TIME_PATTERN), "days": []}
     await manager.update(data)
     await manager.switch_to(SettingsSG.timetable_time)
 

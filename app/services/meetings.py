@@ -6,10 +6,6 @@ async def get_available_meetings(holder_dao: HolderDao, chat: dto.Chat) -> list[
     return await holder_dao.meeting.find_all_by_chat(chat.db_id)
 
 
-async def get_meeting_name_by_id(holder_dao: HolderDao, meeting_id: int) -> str:
-    return await holder_dao.meeting.get_by_id(meeting_id)
-
-
 async def create_new_meeting(holder_dao: HolderDao, meeting_name: str, chat: dto.Chat):
     meeting = dto.Meeting(name=meeting_name, chat_id=chat.db_id)
     await holder_dao.meeting.create(meeting)

@@ -13,6 +13,9 @@ class TimetableDAO(BaseDAO[Timetable]):
     def __init__(self, session: AsyncSession):
         super().__init__(Timetable, session)
 
+    async def get_by_id(self, id_: int) -> dto.Timetable:
+        return dto.Timetable.from_db(await self._get_by_id(id_))
+
     async def find_all_by_meeting_id(self, meeting_id: int) -> list[dto.Timetable]:
         result = await self.session.execute(
             select(self.model).where(self.model.meeting_id == meeting_id))
@@ -25,7 +28,7 @@ class TimetableDAO(BaseDAO[Timetable]):
         except NoResultFound:
             saved = Timetable(meeting_id=meeting_id, time=timetable.time)
         saved.weekdays = [day.value for day in timetable.days]
-        self.save(saved)
+        self._save(saved)
         await self.flush(saved)
 
     async def _get_by_time(self, meeting_id: int, time_: time) -> Timetable:

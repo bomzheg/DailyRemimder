@@ -18,7 +18,7 @@ from app.handlers.settings_dialog.handlers import (
     change_select_meetings,
     change_select_user,
     process_time_message,
-    process_new_meeting_name, save_new_meeting, drop_new_meeting_name,
+    process_new_meeting_name, save_new_meeting, drop_new_meeting_name, change_select_time,
 )
 from app.handlers.settings_dialog.states import SettingsSG
 
@@ -113,12 +113,14 @@ dialog = Dialog(
         state=SettingsSG.participants,
     ),
     Window(
-        Case(
-            {
-                False: Const("Ещё нет запланированного времени"),
-                True: Format("Имеющиеся сейчас настройки:\n{timetable}"),
-            },
-            selector="has_timetable",
+        Const("Настройки времени"),
+        Select(
+            Format("{item.time}"),
+            id="times",
+            item_id_getter=lambda x: x.id,
+            items="timetable",
+            on_click=change_select_time,
+            when="has_timetable",
         ),
         SwitchTo(
             Const("Добавить время"),

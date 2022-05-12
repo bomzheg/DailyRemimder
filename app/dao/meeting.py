@@ -32,7 +32,7 @@ class MeetingDAO(BaseDAO[db.Meeting]):
         )
 
     async def turn_participant(self, meeting_id: int, user_id: int):
-        meeting = await self.get_by_id(meeting_id)
+        meeting = await self._get_by_id(meeting_id)
         user: db.User = await self.session.get(
             db.User,
             user_id,
@@ -44,4 +44,4 @@ class MeetingDAO(BaseDAO[db.Meeting]):
             user.meetings.append(meeting)
 
     async def create(self, meeting: dto.Meeting):
-        self.save(meeting.to_db())
+        self._save(meeting.to_db())
