@@ -6,4 +6,5 @@ aiogram_dialog>=2.0.0b3
 sqlalchemy>=1.4
 alembic
 asyncpg
-ujson
+ujson>=5.2.0
+pydantic

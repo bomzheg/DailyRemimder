@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dao import UserDAO, ChatDAO
 from app.dao.meeting import MeetingDAO
+from app.dao.timetable import TimetableDAO
 from app.models import dto
 
 
@@ -13,11 +14,13 @@ class HolderDao:
     user: UserDAO = field(init=False)
     chat: ChatDAO = field(init=False)
     meeting: MeetingDAO = field(init=False)
+    timetable: TimetableDAO = field(init=False)
 
     def __post_init__(self):
         self.user = UserDAO(self.session)
         self.chat = ChatDAO(self.session)
         self.meeting = MeetingDAO(self.session)
+        self.timetable = TimetableDAO(self.session)
 
     async def commit(self):
         await self.session.commit()

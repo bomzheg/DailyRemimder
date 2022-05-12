@@ -38,7 +38,7 @@ async def prepare_saved_time(dialog_manager: DialogManager, **kwargs):
 
 async def prepare_timetable(dao: HolderDao, dialog_manager: DialogManager, **kwargs):
     data: dict[str, Any] = dialog_manager.current_context().dialog_data
-    timetable = await load_timetable(dao, data["editing_meeting_id"]) or data.get("timetable", [])
+    timetable = await load_timetable(dao, data["editing_meeting_id"])
     return {
         "timetable": render_timetable(timetable),
         "has_timetable": bool(timetable),

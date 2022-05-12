@@ -1,5 +1,6 @@
 import json
 
+from app.models import dto
 from app.models.enums import Weekday
 
 TIME_PATTERN = "%H:%M"
@@ -18,9 +19,9 @@ def render_bool(value: bool) -> str:
     return '✓' if value else '✗'
 
 
-def render_timetable(data: list[dict[str, str | list[str]]]) -> str:
+def render_timetable(data: list[dto.Timetable]) -> str:
     # TODO usability render timetable
-    return json.dumps(data)
+    return json.dumps(list(map(dto.Timetable.dict, data)))
 
 
 def render_weekdays(days: list[str]) -> list[tuple[str, str]]:
