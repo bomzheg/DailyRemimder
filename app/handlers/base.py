@@ -8,7 +8,7 @@ from aiogram.utils.markdown import html_decoration as hd
 
 from app.dao.holder import HolderDao
 from app.models import dto
-from app.services.chat import update_chat_id
+from app.use_cases.chat import update_chat_id
 
 logger = logging.getLogger(__name__)
 

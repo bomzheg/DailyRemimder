@@ -5,9 +5,9 @@ from aiogram.types import TelegramObject
 
 from app.dao.holder import HolderDao
 from app.models import dto
-from app.services.chat import upsert_chat
-from app.services.chats_and_users import upsert_user_chat
-from app.services.user import upsert_user
+from app.use_cases.chat import upsert_chat
+from app.use_cases.chats_and_users import upsert_user_chat
+from app.use_cases.user import upsert_user
 
 
 class LoadDataMiddleware(BaseMiddleware):

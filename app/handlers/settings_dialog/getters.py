@@ -6,9 +6,9 @@ from aiogram_dialog.context.context import Context
 from app.dao import HolderDao
 from app.models import dto
 from app.rendering import render_weekdays
-from app.services.meetings import get_available_meetings, get_meeting_by_id
-from app.services.meetings_participants import get_available_participants
-from app.services.timetables import load_timetable
+from app.use_cases.meetings import get_available_meetings, get_meeting_by_id
+from app.use_cases.meetings_participants import get_available_participants
+from app.use_cases.timetables import load_timetable
 
 
 async def get_potential_participants(dao: HolderDao, chat: dto.Chat, dialog_manager: DialogManager, **kwargs):

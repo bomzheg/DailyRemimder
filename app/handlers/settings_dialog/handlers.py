@@ -8,9 +8,9 @@ from aiogram_dialog.widgets.kbd import Button
 from app.handlers.settings_dialog.states import SettingsSG
 from app.models import dto
 from app.rendering import TIME_PATTERN
-from app.services.meetings import create_new_meeting
-from app.services.meetings_participants import turn_participant
-from app.services.timetables import add_timetable, get_timetable
+from app.use_cases.meetings import create_new_meeting
+from app.use_cases.meetings_participants import turn_participant
+from app.use_cases.timetables import add_timetable, get_timetable
 
 
 async def change_select_user(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
