@@ -8,3 +8,4 @@ alembic
 asyncpg
 ujson>=5.2.0
 pydantic
+git+https://github.com/Tishka17/clepsydra@develop
