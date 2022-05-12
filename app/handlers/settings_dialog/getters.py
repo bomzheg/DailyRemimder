@@ -6,7 +6,7 @@ from aiogram_dialog.context.context import Context
 from app.dao import HolderDao
 from app.models import dto
 from app.rendering import render_weekdays
-from app.services.meetings import get_available_meetings
+from app.services.meetings import get_available_meetings, get_meeting_by_id
 from app.services.meetings_participants import get_available_participants
 from app.services.timetables import load_timetable
 
@@ -24,7 +24,10 @@ async def get_meetings(dao: HolderDao, chat: dto.Chat, **kwargs):
 async def prepare_weekdays(dialog_manager: DialogManager, **kwargs):
     data: dict[str, Any] = dialog_manager.current_context().dialog_data
     days: list[str] = data["current_time"]["days"]
-    return {"weekdays": render_weekdays(days)}
+    return {
+        "weekdays": render_weekdays(days),
+        "current_time": data["current_time"]["time"],
+    }
 
 
 async def prepare_saved_time(dialog_manager: DialogManager, **kwargs):
@@ -45,9 +48,9 @@ async def prepare_timetable(dao: HolderDao, dialog_manager: DialogManager, **kwa
     }
 
 
-async def prepare_meeting_name(aiogd_context: Context, **kwargs):
+async def prepare_meeting_name(dao: HolderDao, aiogd_context: Context, **kwargs):
     data = aiogd_context.dialog_data
-    return {"meeting_name": data["editing_meeting_id"]}
+    return {"meeting_name": await get_meeting_by_id(dao, data["editing_meeting_id"])}
 
 
 async def get_saved_date(aiogd_context: Context, **kwargs):

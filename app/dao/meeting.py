@@ -10,6 +10,9 @@ class MeetingDAO(BaseDAO[db.Meeting]):
     def __init__(self, session: AsyncSession):
         super().__init__(db.Meeting, session)
 
+    async def get_by_id(self, id_: int) -> dto.Meeting:
+        return dto.Meeting.from_db(await self._get_by_id(id_))
+
     async def find_by_name(self, name: str, chat_id: int) -> dto.Meeting:
         result = await self.session.execute(
             select(self.model).where(

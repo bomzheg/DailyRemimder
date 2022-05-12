@@ -7,5 +7,5 @@ class Weekday(enum.Enum):
     WED = "WED"
     THU = "THU"
     FRI = "FRI"
-    SUT = "SUT"
+    SAT = "SAT"
     SUN = "SUN"

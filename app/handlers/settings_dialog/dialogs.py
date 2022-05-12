@@ -76,7 +76,7 @@ dialog = Dialog(
         state=SettingsSG.add_meeting,
     ),
     Window(
-        Format("Настройка {meeting_name}"),
+        Format("Настройка <b>{meeting_name.name}</b>"),
         SwitchTo(
             Const("Подписчики"),
             id="to_participants_ls",
@@ -143,7 +143,7 @@ dialog = Dialog(
             selector="has_data",
         ),
         SwitchTo(
-            Const("Назад"),
+            Const("В главное меню"),
             id="to_main",
             state=SettingsSG.meeting_main,
         ),
@@ -160,11 +160,16 @@ dialog = Dialog(
         state=SettingsSG.timetable_time,
     ),
     Window(
-        Const("Выберите дни недели для данного времени"),
+        Format("Выберите дни недели для {current_time}"),
         SwitchTo(
             Const("В главное меню"),
             id="to_main",
             state=SettingsSG.meeting_main,
+        ),
+        SwitchTo(
+            Const("К списку времён"),
+            id="to_timetable",
+            state=SettingsSG.timetable,
         ),
         Select(
             Format("{item[0]}"),

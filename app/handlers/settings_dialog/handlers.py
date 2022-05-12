@@ -27,7 +27,7 @@ async def change_select_time(c: CallbackQuery, widget: Any, manager: DialogManag
     if not isinstance(data, dict):
         data = {}
     timetable = await get_timetable(manager.data["dao"], int(item_id))
-    data["current_time"] = {"time": timetable.time, "days": timetable.days}
+    data["current_time"] = {"time": timetable.time, "days": list(map(lambda day: day.name, timetable.days))}
     await manager.update(data)
     await manager.switch_to(SettingsSG.timetable_days)
 

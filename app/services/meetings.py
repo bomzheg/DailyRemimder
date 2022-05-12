@@ -10,3 +10,7 @@ async def create_new_meeting(holder_dao: HolderDao, meeting_name: str, chat: dto
     meeting = dto.Meeting(name=meeting_name, chat_id=chat.db_id)
     await holder_dao.meeting.create(meeting)
     await holder_dao.commit()
+
+
+async def get_meeting_by_id(holder_dao: HolderDao, id_: int) -> dto.Meeting:
+    return await holder_dao.meeting.get_by_id(id_)
