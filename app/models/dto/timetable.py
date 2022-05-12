@@ -21,3 +21,14 @@ class Timetable(pydantic.BaseModel):
             time=other.time,
             meeting_id=other.meeting_id,
         )
+
+
+WEEKDAYS = {
+    Weekday.MON: "ПН",
+    Weekday.TUE: "ВТ",
+    Weekday.WED: "СР",
+    Weekday.THU: "ЧТ",
+    Weekday.FRI: "ПТ",
+    Weekday.SUT: "СБ",
+    Weekday.SUN: "ВС",
+}

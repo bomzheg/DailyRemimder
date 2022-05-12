@@ -1,27 +1,17 @@
-import json
+from aiogram.utils.text_decorations import HtmlDecoration
 
-from app.models import dto
-from app.models.enums import Weekday
+from app.models.dto.timetable import WEEKDAYS
 
 TIME_PATTERN = "%H:%M"
-WEEKDAYS = {
-    Weekday.MON: "ПН",
-    Weekday.TUE: "ВТ",
-    Weekday.WED: "СР",
-    Weekday.THU: "ЧТ",
-    Weekday.FRI: "ПТ",
-    Weekday.SUT: "СБ",
-    Weekday.SUN: "ВС",
-}
 
 
 def render_bool(value: bool) -> str:
     return '✓' if value else '✗'
 
 
-def render_timetable(data: list[dto.Timetable]) -> str:
+def render_timetable(data: list['dto.Timetable']) -> str:
     # TODO usability render timetable
-    return json.dumps(list(map(dto.Timetable.dict, data)))
+    return HtmlDecoration().quote(str(data))
 
 
 def render_weekdays(days: list[str]) -> list[tuple[str, str]]:

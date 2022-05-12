@@ -23,8 +23,8 @@ class TimetableDAO(BaseDAO[Timetable]):
         try:
             saved = await self._get_by_time(meeting_id=meeting_id, time_=timetable.time)
         except NoResultFound:
-            saved = Timetable(meeting_id=meeting_id)
-        saved.weekdays = timetable.days
+            saved = Timetable(meeting_id=meeting_id, time=timetable.time)
+        saved.weekdays = [day.value for day in timetable.days]
         self.save(saved)
         await self.flush(saved)
 
