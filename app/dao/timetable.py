@@ -31,6 +31,9 @@ class TimetableDAO(BaseDAO[Timetable]):
         self._save(saved)
         await self.flush(saved)
 
+    async def get_jobs_in_range(self, date_range: dto.DatetimeRange, limit: int = None) -> list[dto.Job]:
+        pass
+
     async def _get_by_time(self, meeting_id: int, time_: time) -> Timetable:
         result = await self.session.execute(
             select(self.model).where(
